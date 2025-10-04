@@ -1,0 +1,19 @@
+{
+  "DATA_ROOT": "data",
+  "IMAGES_DIR": "data/Images",
+  "CAPTIONS_FILE": "data/captions.txt",
+  "OUTPUT_DIR": "artifacts",
+  "IMG_SIZE": 224,
+  "BATCH_SIZE": 64,
+  "NUM_WORKERS": 0,
+  "EPOCHS": 12,
+  "LR": 0.0003,
+  "EMBED_DIM": 256,
+  "HIDDEN_DIM": 512,
+  "NUM_LAYERS": 1,
+  "DROPOUT": 0.1,
+  "MIN_FREQ": 3,
+  "MAX_LEN": 28,
+  "FREEZE_CNN": true,
+  "SEED": 42
+}
