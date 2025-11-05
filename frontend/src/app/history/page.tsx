@@ -1,38 +1,50 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchHistory } from "@/lib/api";
+import { HistoryItem } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function Page() {
-  const [items, setItems] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState("");
+  const [items, setItems] = React.useState<HistoryItem[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string>("");
 
-  async function load() {
+  async function load(): Promise<void> {
     try {
       setError("");
       setLoading(true);
       const data = await fetchHistory();
       setItems(data || []);
       if ((data || []).length === 0) toast.info("No history yet.");
-    } catch (e: any) {
-      const msg = e?.message || "Failed to load history";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to load history";
       setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
     }
   }
-  React.useEffect(() => { load(); }, []);
+
+  React.useEffect(() => {
+    void load();
+  }, []);
 
   return (
     <AppShell>
-      <PageHeader title="History" subtitle="Your recent captions."
-        actions={<Button onClick={load} variant="outline">Refresh</Button>} />
+      <PageHeader
+        title="History"
+        subtitle="Your recent captions."
+        actions={
+          <Button onClick={() => void load()} variant="outline">
+            Refresh
+          </Button>
+        }
+      />
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {!loading && items.length === 0 && (
