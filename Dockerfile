@@ -16,9 +16,12 @@ RUN npm run build && npm run export
 FROM python:3.12-slim AS be
 WORKDIR /app/backend
 COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt \
- && pip uninstall -y psycopg2-binary || true
+# Install CPU-only PyTorch first (small & fast)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+      torch==2.4.1 torchvision==0.19.1 && \
+    pip install --no-cache-dir -r requirements.txt
+
 COPY backend /app/backend
 
 # ---------- Final image with Nginx + Uvicorn ----------
