@@ -1,17 +1,11 @@
 # ---------- Build frontend ----------
-FROM node:20-alpine AS fe
+FROM node:18-alpine AS fe
 WORKDIR /app/frontend
-
-# Set API base for build-time (the frontend will call /api/*)
-ENV NEXT_PUBLIC_API_URL=/api
-
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend ./
-# Build static Next site and export to /app/frontend/out
-# (Make sure package.json has "build": "next build" and "export": "next export")
-RUN npm run build && npm run export
-
+# Next.js 15: output: "export" makes `next build` write to /app/frontend/out
+RUN npm run build
 # ---------- Build backend ----------
 FROM python:3.12-slim AS be
 WORKDIR /app/backend
