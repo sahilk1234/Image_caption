@@ -1,5 +1,5 @@
 # app/inference.py
-import os, json, time
+import os, json, time, logging
 from pathlib import Path
 from typing import Tuple
 from PIL import Image
@@ -14,6 +14,8 @@ try:
     load_dotenv()
 except Exception:
     pass
+
+logger = logging.getLogger(__name__)
 
 # ---- resolve artifacts relative to backend/ ----
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -100,6 +102,15 @@ def _ts_mentions_cuda(ts_module) -> bool:
     except Exception:
         return False
 
+def _looks_like_lfs_pointer(path: Path) -> bool:
+    try:
+        with path.open("rb") as f:
+            head = f.read(200)
+        text = head.decode("utf-8", errors="ignore")
+        return text.startswith("version https://git-lfs.github.com/spec/v1")
+    except Exception:
+        return False
+
 def greedy_decode_ts(model, images: torch.Tensor) -> torch.Tensor:
     """
     Greedy decode for a training-style forward(images, caps) -> (logits, aux)
@@ -140,6 +151,10 @@ def _build_eager_model() -> OptimizedCaptionNet:
     )
 
 def _load_eager_weights() -> OptimizedCaptionNet:
+    if _looks_like_lfs_pointer(WEIGHTS_PT):
+        raise RuntimeError(
+            f"WEIGHTS_PT looks like a Git LFS pointer. Ensure artifacts are fetched. WEIGHTS_PT={WEIGHTS_PT}"
+        )
     checkpoint = torch.load(str(WEIGHTS_PT), map_location=MODEL_DEVICE)
     if isinstance(checkpoint, torch.nn.Module):
         model = checkpoint
@@ -162,10 +177,17 @@ def load_models():
         return
 
     if MODEL_TS.exists():
-        _model_ts = torch.jit.load(str(MODEL_TS), map_location=MODEL_DEVICE).eval()
+        if _looks_like_lfs_pointer(MODEL_TS):
+            logger.warning("MODEL_TS looks like a Git LFS pointer. Falling back to eager weights.")
+        else:
+            try:
+                _model_ts = torch.jit.load(str(MODEL_TS), map_location=MODEL_DEVICE).eval()
+            except Exception as exc:
+                logger.warning("Failed to load MODEL_TS (%s). Falling back to eager weights if available.", exc)
+                _model_ts = None
 
         # If runtime is CPU but TS graph is CUDA-baked, fall back to eager weights.
-        if MODEL_DEVICE.type == "cpu" and _ts_mentions_cuda(_model_ts):
+        if _model_ts is not None and MODEL_DEVICE.type == "cpu" and _ts_mentions_cuda(_model_ts):
             if WEIGHTS_PT.exists():
                 _model_ts = None
                 _model_eager = _load_eager_weights()
@@ -180,8 +202,14 @@ def load_models():
                 f"MODEL_TS={MODEL_TS}"
             )
 
-        _model_version = MODEL_TS.name
-        return
+        if _model_ts is not None:
+            _model_version = MODEL_TS.name
+            return
+
+        if WEIGHTS_PT.exists():
+            _model_eager = _load_eager_weights()
+            _model_version = WEIGHTS_PT.name
+            return
 
     if WEIGHTS_PT.exists():
         _model_eager = _load_eager_weights()
