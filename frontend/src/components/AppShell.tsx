@@ -23,10 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { ensureGuestAuth, getUser, clearAuth, type AuthUser } from "@/lib/auth";
+import { type AuthUser } from "@/lib/auth";
 import { useAuth } from "@/lib/useAuth";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 function initialsOf(u?: AuthUser | null) {
   const name = (u?.name || u?.email || "G").trim();
@@ -73,10 +71,10 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
+        "flex items-center gap-3 rounded-2xl px-3 py-2 text-sm transition",
         active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted"
+          ? "bg-card/80 text-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-card/60"
       )}
     >
       <Icon className="h-4 w-4" />
@@ -100,13 +98,13 @@ export function TopNav() {
   };
 
   return (
-    <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+    <div className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-sm">
             IC
           </div>
-          <span className="hidden text-sm text-muted-foreground sm:block">
+          <span className="hidden text-sm font-medium text-muted-foreground sm:block">
             Image Captioning
           </span>
         </Link>
@@ -167,7 +165,7 @@ export function SideNav() {
   const { isGuest } = useAuth();
 
   return (
-    <aside className="hidden h-[calc(100dvh-56px)] w-60 shrink-0 border-r bg-muted/30 p-3 md:block">
+    <aside className="hidden h-[calc(100dvh-64px)] w-60 shrink-0 border-r border-border/60 bg-card/40 p-3 md:block">
       <div className="space-y-1">
         {NAV.map((n) => (
           <NavItem key={n.href} href={n.href} label={n.label} Icon={n.icon} />
@@ -186,11 +184,16 @@ export function SideNav() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh w-full">
+    <div className="relative min-h-dvh w-full">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -top-40 -left-32 h-80 w-80 rounded-full bg-primary/20 blur-3xl animate-float" />
+        <div className="absolute top-10 right-[-10%] h-96 w-96 rounded-full bg-[oklch(0.9_0.07_90/0.45)] blur-3xl animate-float" />
+        <div className="absolute bottom-[-20%] left-[20%] h-72 w-72 rounded-full bg-[oklch(0.82_0.08_190/0.35)] blur-3xl animate-float" />
+      </div>
       <TopNav />
       <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)]">
         <SideNav />
-        <main className="min-h-[calc(100dvh-56px)] p-4 md:p-6">{children}</main>
+        <main className="min-h-[calc(100dvh-64px)] p-4 md:p-6">{children}</main>
       </div>
     </div>
   );
@@ -206,9 +209,9 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-fade-up">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{title}</h1>
         {subtitle && (
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}

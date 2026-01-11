@@ -29,9 +29,10 @@ export async function fetchHistory(): Promise<HistoryItem[]> {
   });
   if (!res.ok) throw new Error(`History failed: ${res.status}`);
   const data = (await res.json()) as HistoryItem[];
+  const base = API_BASE.replace(/\/$/, "");
   return (data || []).map((it) => ({
     ...it,
-    image_url: it.image_url ?? `${API_BASE}/images/${it.image_id}`,
+    image_url: `${base}/images/${it.image_id}`,
   }));
 }
 

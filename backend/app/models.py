@@ -33,6 +33,7 @@ class Caption(SQLModel, table=True):
     model_version: Optional[str] = None
     latency_ms: Optional[int] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    model_config = {"protected_namespaces": ()}
 
 class HistoryItem(BaseModel):
     id: int

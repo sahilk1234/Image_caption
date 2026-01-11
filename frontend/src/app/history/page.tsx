@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchHistory } from "@/lib/api";
 import { HistoryItem } from "@/lib/types";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function Page() {
   const [items, setItems] = React.useState<HistoryItem[]>([]);
@@ -40,15 +40,30 @@ export default function Page() {
         title="History"
         subtitle="Your recent captions."
         actions={
-          <Button onClick={() => void load()} variant="outline">
-            Refresh
+          <Button onClick={() => void load()} variant="outline" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading…
+              </>
+            ) : (
+              "Refresh"
+            )}
           </Button>
         }
       />
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-fade-in">
+        {loading && (
+          <Card className="col-span-full border-border/60 bg-card/70 shadow-sm">
+            <CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading history…
+            </CardContent>
+          </Card>
+        )}
         {!loading && items.length === 0 && (
-          <Card>
+          <Card className="border-border/60 bg-card/70 shadow-sm">
             <CardContent className="p-6 text-sm text-muted-foreground">
               No captions yet.
             </CardContent>
@@ -56,14 +71,17 @@ export default function Page() {
         )}
 
         {items.map((it: any) => (
-          <Card key={it.id} className="overflow-hidden">
+          <Card key={it.id} className="overflow-hidden border-border/60 bg-card/70 shadow-sm">
             {it.image_url && (
-              <img
-                src={it.image_url}
-                alt={it.image_filename || `Image #${it.image_id}`}
-                className="w-full h-40 object-cover"
-                loading="lazy"
-              />
+              <div className="relative">
+                <img
+                  src={it.image_url}
+                  alt={it.image_filename || `Image #${it.image_id}`}
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
+              </div>
             )}
             <CardHeader>
               <CardTitle className="text-sm truncate">

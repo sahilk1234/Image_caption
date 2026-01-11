@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { setAuth, getToken, getUser, isGuest } from "@/lib/auth";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 type TabKey = "login" | "register";
 
@@ -127,126 +128,156 @@ export default function Page() {
         subtitle="Or continue as guest; a 24-hour guest session is created automatically on first use."
       />
 
-      <Tabs
-        value={tab}
-        onValueChange={(v) => setTab(v as TabKey)}
-        className="max-w-2xl"
-      >
-        <TabsList className="mb-4">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="register">Register</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as TabKey)}
+          className="max-w-2xl"
+        >
+          <TabsList className="mb-4">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
 
-        {/* LOGIN */}
-        <TabsContent value="login">
-          <Card>
+          {/* LOGIN */}
+          <TabsContent value="login">
+            <Card className="border-border/60 bg-card/70 shadow-sm">
+              <CardHeader>
+                <CardTitle>Login</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="text-sm">Email</label>
+                  <Input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="me@example.com"
+                    type="email"
+                    autoComplete="email"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Password</label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="******"
+                    minLength={MIN_PASS}
+                    autoComplete="current-password"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Minimum {MIN_PASS} characters
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={login} disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in…
+                      </>
+                    ) : (
+                      "Login"
+                    )}
+                  </Button>
+                </div>
+                {msgLogin && (
+                  <p className="text-sm text-muted-foreground">{msgLogin}</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* REGISTER */}
+          <TabsContent value="register">
+            <Card className="border-border/60 bg-card/70 shadow-sm">
+              <CardHeader>
+                <CardTitle>Register</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="text-sm">Name</label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    autoComplete="name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Email</label>
+                  <Input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="me@example.com"
+                    type="email"
+                    autoComplete="email"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Password</label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="******"
+                    minLength={MIN_PASS}
+                    autoComplete="new-password"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Minimum {MIN_PASS} characters
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={register}
+                    variant="secondary"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating…
+                      </>
+                    ) : (
+                      "Create account"
+                    )}
+                  </Button>
+                </div>
+                {msgReg && (
+                  <p className="text-sm text-muted-foreground">{msgReg}</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <div className="space-y-4">
+          <Card className="border-border/60 bg-card/70 shadow-sm">
             <CardHeader>
-              <CardTitle>Login</CardTitle>
+              <CardTitle>Guest Mode</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm">Email</label>
-                <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="me@example.com"
-                  type="email"
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <label className="text-sm">Password</label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="******"
-                  minLength={MIN_PASS}
-                  autoComplete="current-password"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Minimum {MIN_PASS} characters
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={login} disabled={loading}>
-                  {loading ? "Please wait…" : "Login"}
-                </Button>
-              </div>
-              {msgLogin && (
-                <p className="text-sm text-muted-foreground">{msgLogin}</p>
-              )}
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Caption images without an account. A 24-hour guest session is
+                created automatically on first use.
+              </p>
+              <p>
+                Signing in merges guest history and keeps everything permanent.
+              </p>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* REGISTER */}
-        <TabsContent value="register">
-          <Card>
+          <Card className="border-border/60 bg-card/60">
             <CardHeader>
-              <CardTitle>Register</CardTitle>
+              <CardTitle className="text-sm">Security</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm">Name</label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  autoComplete="name"
-                />
-              </div>
-              <div>
-                <label className="text-sm">Email</label>
-                <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="me@example.com"
-                  type="email"
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <label className="text-sm">Password</label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="******"
-                  minLength={MIN_PASS}
-                  autoComplete="new-password"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Minimum {MIN_PASS} characters
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={register}
-                  variant="secondary"
-                  disabled={loading}
-                >
-                  {loading ? "Please wait…" : "Create account"}
-                </Button>
-              </div>
-              {msgReg && (
-                <p className="text-sm text-muted-foreground">{msgReg}</p>
-              )}
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>Passwords are hashed server-side.</p>
+              <p>Tokens are stored locally for quick re-login.</p>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Guest Mode</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Caption images without an account. We’ll create a 24-hour guest
-            session automatically on first use.
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </AppShell>
   );
