@@ -8,15 +8,23 @@ RUN npm run build
 
 # ---------- Build backend (Python deps) ----------
 FROM python:3.11-slim AS be
-WORKDIR /app/backend
-COPY backend/requirements.txt ./
+WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git git-lfs \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /app/backend/requirements.txt
+
+WORKDIR /app/backend
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
       torch==2.4.1 torchvision==0.19.1 \
  && pip install --no-cache-dir -r requirements.txt
 
-COPY backend /app/backend
+WORKDIR /app
+COPY . /app
+RUN if [ -d /app/.git ]; then git lfs install && git lfs pull; else echo "No .git directory; skipping git lfs pull"; fi
 
 # ---------- Final runtime ----------
 FROM python:3.11-slim
