@@ -24,13 +24,6 @@ RUN NODE_ENV=production npm run build
 FROM python:3.11-slim AS be
 WORKDIR /app
 
-# Install git + git-lfs
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    git-lfs \
- && git lfs install \
- && rm -rf /var/lib/apt/lists/*
-
 # Install python deps
 COPY backend/requirements.txt /app/backend/requirements.txt
 WORKDIR /app/backend
@@ -43,9 +36,6 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy backend source (includes LFS pointer files)
 WORKDIR /app
 COPY backend /app/backend
-
-# 🔴 CRITICAL: pull real LFS files (models >180MB)
-RUN cd /app/backend && git lfs pull
 
 
 ############################
