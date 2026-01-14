@@ -1,9 +1,21 @@
 # ---------- Build frontend ----------
 FROM node:18-alpine AS fe
 WORKDIR /app/frontend
+
+# Prevent memory issues in CI
+ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV NODE_ENV=production
+
 COPY frontend/package*.json ./
 RUN npm ci
+
 COPY frontend ./
+
+# If your frontend expects env vars, provide safe defaults
+# (adjust names if needed)
+ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build
 
 # ---------- Build backend (Python deps) ----------
@@ -22,15 +34,14 @@ RUN pip install --no-cache-dir --upgrade pip \
       torch==2.4.1 torchvision==0.19.1 \
  && pip install --no-cache-dir -r requirements.txt
 
+# Copy backend source (NO git / lfs here)
 WORKDIR /app
-COPY . /app
-# RUN if [ -d /app/.git ]; then git lfs install && git lfs pull; else echo "No .git directory; skipping git lfs pull"; fi
+COPY backend /app/backend
 
 # ---------- Final runtime ----------
 FROM python:3.11-slim
 WORKDIR /app
 
-# Koyeb should expose 8080 -> nginx listens on 8080
 ENV PORT=8080
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -38,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       postgresql postgresql-contrib \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy python + deps from builder
+# Copy python + deps
 COPY --from=be /usr/local /usr/local
 COPY --from=be /app/backend /app/backend
 
@@ -51,7 +62,6 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY scripts/start-postgres.sh /app/scripts/start-postgres.sh
 RUN chmod +x /app/scripts/start-postgres.sh
 
-# Postgres data dir (IMPORTANT: mount a volume here on Koyeb if you want persistence)
 ENV PGDATA=/var/lib/postgresql/data
 RUN mkdir -p "$PGDATA" && chown -R postgres:postgres /var/lib/postgresql
 
