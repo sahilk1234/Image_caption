@@ -12,7 +12,7 @@ COPY frontend ./
 
 # If your frontend expects env vars, provide safe defaults
 # (adjust names if needed)
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+ARG NEXT_PUBLIC_API_URL=/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN NODE_ENV=production npm run build

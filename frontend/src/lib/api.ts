@@ -15,7 +15,8 @@ async function readError(res: Response): Promise<string> {
   try {
     const data = await res.json();
     if (typeof data?.detail === "string") return data.detail;
-    if (Array.isArray(data?.detail)) return data.detail.map((d) => d?.msg || "").join(", ");
+    if (Array.isArray(data?.detail))
+      return data.detail.map((d: { msg?: string }) => d?.msg || "").join(", ");
     if (typeof data?.message === "string") return data.message;
   } catch {}
   try {
