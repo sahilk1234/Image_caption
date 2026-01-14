@@ -4,7 +4,6 @@ WORKDIR /app/frontend
 
 # Prevent memory issues in CI
 ENV NODE_OPTIONS=--max_old_space_size=4096
-ENV NODE_ENV=production
 
 COPY frontend/package*.json ./
 RUN npm ci
@@ -16,7 +15,7 @@ COPY frontend ./
 ARG NEXT_PUBLIC_API_URL=http://localhost:8080
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-RUN npm run build
+RUN NODE_ENV=production npm run build
 
 # ---------- Build backend (Python deps) ----------
 FROM python:3.11-slim AS be
