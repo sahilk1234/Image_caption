@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { setAuth, getToken, getUser, isGuest } from "@/lib/auth";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getApiBase } from "@/lib/apiBase";
 
 type TabKey = "login" | "register";
 
@@ -23,7 +24,7 @@ export default function Page() {
   const [msgLogin, setMsgLogin] = React.useState("");
   const [msgReg, setMsgReg] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  const API = getApiBase();
   const MIN_PASS = 6;
 
   React.useEffect(() => {

@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { fetchHistory } from "@/lib/api";
 import { HistoryItem } from "@/lib/types";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { ImageOff, Loader2 } from "lucide-react";
 
 export default function Page() {
   const [items, setItems] = React.useState<HistoryItem[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>("");
+  const [broken, setBroken] = React.useState<Record<number, boolean>>({});
 
   async function load(): Promise<void> {
     try {
@@ -72,15 +73,23 @@ export default function Page() {
 
         {items.map((it: any) => (
           <Card key={it.id} className="overflow-hidden border-border/60 bg-card/70 shadow-sm">
-            {it.image_url && (
+            {it.image_url && !broken[it.id] ? (
               <div className="relative">
                 <img
                   src={it.image_url}
                   alt={it.image_filename || `Image #${it.image_id}`}
                   className="h-40 w-full object-cover"
                   loading="lazy"
+                  onError={() => setBroken((prev) => ({ ...prev, [it.id]: true }))}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center bg-muted/40 text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs">
+                  <ImageOff className="h-4 w-4" />
+                  Preview unavailable
+                </div>
               </div>
             )}
             <CardHeader>

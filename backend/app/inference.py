@@ -1,5 +1,5 @@
 # app/inference.py
-import os, json, time, logging
+import os, json, time, logging, inspect, gc
 from pathlib import Path
 from typing import Tuple
 from PIL import Image
@@ -155,7 +155,17 @@ def _load_eager_weights() -> OptimizedCaptionNet:
         raise RuntimeError(
             f"WEIGHTS_PT looks like a Git LFS pointer. Ensure artifacts are fetched. WEIGHTS_PT={WEIGHTS_PT}"
         )
-    checkpoint = torch.load(str(WEIGHTS_PT), map_location=MODEL_DEVICE)
+    load_kwargs = {"map_location": MODEL_DEVICE}
+    try:
+        params = inspect.signature(torch.load).parameters
+        if "weights_only" in params:
+            load_kwargs["weights_only"] = True
+        if "mmap" in params:
+            load_kwargs["mmap"] = True
+    except (TypeError, ValueError):
+        pass
+
+    checkpoint = torch.load(str(WEIGHTS_PT), **load_kwargs)
     if isinstance(checkpoint, torch.nn.Module):
         model = checkpoint
     else:
@@ -169,6 +179,9 @@ def _load_eager_weights() -> OptimizedCaptionNet:
             model.load_state_dict(state_dict)
         except RuntimeError as exc:
             raise RuntimeError(f"Failed to load weights from {WEIGHTS_PT}") from exc
+        del state_dict
+    del checkpoint
+    gc.collect()
     return model.to(MODEL_DEVICE).eval()
 
 def load_models():
@@ -218,7 +231,8 @@ def load_models():
 
     raise FileNotFoundError(f"No artifacts found. Expected {MODEL_TS} or {WEIGHTS_PT}.")
 
-load_models()
+if os.getenv("MODEL_AUTOLOAD", "1").strip().lower() not in {"0", "false", "no"}:
+    load_models()
 
 def caption_image(pil_img: Image.Image) -> Tuple[str, int, str]:
     t0 = time.time()

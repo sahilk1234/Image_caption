@@ -2,6 +2,7 @@ from __future__ import annotations
 import io
 from datetime import datetime, timedelta
 
+import logging
 from fastapi import FastAPI, Depends, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
@@ -16,6 +17,7 @@ from .inference import caption_image
 from .auth import router as auth_router
 
 app = FastAPI(title="Image Captioning API", version="0.1.0")
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,7 +64,21 @@ def caption(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid image")
 
-    text, latency_ms, model_version = caption_image(pil)
+    try:
+        text, latency_ms, model_version = caption_image(pil)
+    except FileNotFoundError as exc:
+        logger.exception("Model artifacts missing")
+        raise HTTPException(status_code=503, detail="Model artifacts not available") from exc
+    except (RuntimeError, MemoryError) as exc:
+        msg = str(exc)
+        if "LFS" in msg or "TorchScript" in msg or "weights.pt" in msg:
+            logger.exception("Model unavailable")
+            raise HTTPException(status_code=503, detail="Model unavailable") from exc
+        logger.exception("Captioning failed")
+        raise HTTPException(status_code=500, detail="Captioning failed") from exc
+    except Exception as exc:
+        logger.exception("Captioning failed")
+        raise HTTPException(status_code=500, detail="Captioning failed") from exc
 
     # Persist only if we have some identity (guest or user)
     if user_id or anon_id:
