@@ -12,6 +12,10 @@ Full-stack app for captioning images with a small TorchScript model, guest sessi
 - scripts/ - Postgres bootstrap for container runtime
 - Dockerfile, nginx.conf, supervisord.conf - container build and runtime
 
+## Live Demo
+- UI: https://imagecaption.sahilkhadtare.com
+- API: https://imagecaption.sahilkhadtare.com/api
+
 ## Quick Start (local)
 1) Backend
 - Follow `backend/README.md`.
